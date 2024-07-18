@@ -8,7 +8,7 @@ pipeline {
     
     environment {
         GIT_REPO_URL = 'https://github.com/ahurein-amalitech/jenkins-rest-example'
-        BRANCH = 'main'
+        BRANCH = 'lab_2'
         TOMCAT_URL = 'http://localhost:8081'
         CREDENTIALS_ID = 'tomcat_admin'
     }
