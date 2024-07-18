@@ -1,36 +1,73 @@
 pipeline {
+
     agent any
+
     tools {
         maven "maven"
     }
     
+    environment {
+        GIT_REPO_URL = 'https://github.com/ahurein-amalitech/jenkins-rest-example'
+        BRANCH = 'main'
+        TOMCAT_URL = 'http://localhost:8081'
+        CREDENTIALS_ID = 'tomcat_admin'
+    }
+    
     stages {
-        stage("Build") {
+        stage("Checkout") {
             steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/ahurein-amalitech/jenkins-rest-example']])
-                sh 'mvn clean install'
+                checkout scmGit(branches: [[name: "*/${BRANCH}"]], extensions: [], userRemoteConfigs: [[url: "${GIT_REPO_URL}"]])
             }
         }
         
-        stage("Build docker image"){
+        stage("Unit Tests") {
             steps {
-                script {
-                    sh 'docker rmi ahurein/devops_doc'
-                    sh "docker build -t ahurein/devops_doc ."
+                sh 'mvn test'
+            }
+            post {
+                success {
+                    junit '**/target/surefire-reports/*.xml'
+                    echo "Unit tests completed successfully"
+                }
+                failure {
+                    echo "Unit tests failed"
                 }
             }
         }
-        
-        stage("Push image to docker hub"){
+
+        stage("Build") {
             steps {
-                script {
-                    withCredentials([string(credentialsId: 'dockerhub-pwd', variable: 'dockerhubpwd')]) {
-                        sh "docker login -u ahurein -p ${dockerhubpwd}"
-                    }
-                    sh 'docker push ahurein/devops_doc'
+                sh 'mvn clean package'
+            }
+            post {
+                success {
+                    echo "Archiving the artifact"
+                    archiveArtifacts artifacts: "**/target/*.war"
+                }
+                failure {
+                    echo "Build failed"
+                }
+            }
+        }
+
+        stage("Deploy to Tomcat") {
+            steps {
+                deploy adapters: [tomcat9(credentialsId: "${CREDENTIALS_ID}", path: '', url: "${TOMCAT_URL}")], contextPath: null, war: '**/*.war'
+            }
+            post {
+                success {
+                    echo "Deployment to Tomcat successful"
+                }
+                failure {
+                    echo "Deployment to Tomcat failed"
                 }
             }
         }
     }
-    
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
 }
