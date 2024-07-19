@@ -1,16 +1,15 @@
 pipeline {
-
     agent any
-
     tools {
         maven "maven"
     }
-    
+
     environment {
         GIT_REPO_URL = 'https://github.com/ahurein-amalitech/jenkins-rest-example'
-        BRANCH = 'lab_2'
-        TOMCAT_URL = 'http://localhost:8081'
-        CREDENTIALS_ID = 'tomcat_admin'
+        BRANCH = 'lab_3'
+        DOCKER_IMAGE = 'ahurein/lab_2_i'
+        DOCKER_CREDENTIALS_ID = 'dockerhub-pwd'
+        CONTAINER_TAG = 'lab_2_c'
     }
     
     stages {
@@ -19,8 +18,8 @@ pipeline {
                 checkout scmGit(branches: [[name: "*/${BRANCH}"]], extensions: [], userRemoteConfigs: [[url: "${GIT_REPO_URL}"]])
             }
         }
-        
-        stage("Unit Tests") {
+
+       stage("Unit Tests") {
             steps {
                 sh 'mvn test'
             }
@@ -34,32 +33,53 @@ pipeline {
                 }
             }
         }
-
+        
         stage("Build") {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean install'
             }
             post {
                 success {
-                    echo "Archiving the artifact"
-                    archiveArtifacts artifacts: "**/target/*.war"
+                    echo "Build completed successfully"
                 }
                 failure {
                     echo "Build failed"
                 }
             }
         }
-
-        stage("Deploy to Tomcat") {
+        
+        stage("Build Docker Image") {
             steps {
-                deploy adapters: [tomcat9(credentialsId: "${CREDENTIALS_ID}", path: '', url: "${TOMCAT_URL}")], contextPath: null, war: '**/*.war'
+                script {
+                    sh "docker stop ${CONTAINER_TAG}"
+                    sh "docker rm ${CONTAINER_TAG}"
+                    sh "docker rmi ${DOCKER_IMAGE} || true"
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                    sh "docker run -p 8082:8080 -t ${CONTAINER_TAG} ${DOCKER_IMAGE}"
+                }
             }
             post {
                 success {
-                    echo "Deployment to Tomcat successful"
+                    echo "Docker image built successfully"
                 }
                 failure {
-                    echo "Deployment to Tomcat failed"
+                    echo "Docker image build failed"
+                }
+            }
+        }
+
+        stage("BRun Docker Image") {
+            steps {
+                script {
+                    sh "docker run -p 8082:8080 -t ${CONTAINER_TAG} ${DOCKER_IMAGE}"
+                }
+            }
+            post {
+                success {
+                    echo "Docker image run successfully"
+                }
+                failure {
+                    echo "Docker image run failed"
                 }
             }
         }
