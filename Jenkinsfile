@@ -6,7 +6,7 @@ pipeline {
 
     environment {
         GIT_REPO_URL = 'https://github.com/ahurein-amalitech/jenkins-rest-example'
-        BRANCH = 'lab_3'
+        BRANCH = 'lab_2'
         DOCKER_IMAGE = 'ahurein/lab_2_i'
         DOCKER_CREDENTIALS_ID = 'dockerhub-pwd'
         CONTAINER_TAG = 'lab_2_c'
@@ -51,13 +51,10 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 script {
-                    sh "cat Dockerfile"
                     sh "docker stop ${CONTAINER_TAG} || true"
                     sh "docker rm ${CONTAINER_TAG} || true"
                     sh "docker rmi ${DOCKER_IMAGE} || true"
                     sh "docker build --no-cache -t ${DOCKER_IMAGE} ."
-                    sh "echo '------------'"
-                    sh "cat Dockerfile"
                 }
             }
             post {
