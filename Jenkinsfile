@@ -55,7 +55,6 @@ pipeline {
                     sh "docker rm ${CONTAINER_TAG} || true"
                     sh "docker rmi ${DOCKER_IMAGE} || true"
                     sh "docker build -t ${DOCKER_IMAGE} ."
-                    sh "docker run -p 8082:8080 -t ${CONTAINER_TAG} ${DOCKER_IMAGE}"
                 }
             }
             post {
@@ -71,7 +70,7 @@ pipeline {
         stage("BRun Docker Image") {
             steps {
                 script {
-                    sh "docker run -p 8082:8080 -t ${CONTAINER_TAG} ${DOCKER_IMAGE}"
+                    sh "docker run -p 8082:8080 -d --name ${CONTAINER_TAG} ${DOCKER_IMAGE}"
                 }
             }
             post {
