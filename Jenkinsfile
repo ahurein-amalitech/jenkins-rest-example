@@ -54,7 +54,7 @@ pipeline {
                     sh "docker stop ${CONTAINER_TAG} || true"
                     sh "docker rm ${CONTAINER_TAG} || true"
                     sh "docker rmi ${DOCKER_IMAGE} || true"
-                    sh "docker build -t ${DOCKER_IMAGE} ."
+                    sh "docker build --no-cache -t ${DOCKER_IMAGE} ."
                 }
             }
             post {
