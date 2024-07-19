@@ -51,10 +51,13 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 script {
+                    sh "cat Dockerfile"
                     sh "docker stop ${CONTAINER_TAG} || true"
                     sh "docker rm ${CONTAINER_TAG} || true"
                     sh "docker rmi ${DOCKER_IMAGE} || true"
                     sh "docker build --no-cache -t ${DOCKER_IMAGE} ."
+                    sh "echo '------------'"
+                    sh "cat Dockerfile"
                 }
             }
             post {
@@ -67,7 +70,7 @@ pipeline {
             }
         }
 
-        stage("BRun Docker Image") {
+        stage("Run Docker Image") {
             steps {
                 script {
                     sh "docker run -p 8082:8080 -d --name ${CONTAINER_TAG} ${DOCKER_IMAGE}"
