@@ -51,8 +51,8 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 script {
-                    sh "docker stop ${CONTAINER_TAG}"
-                    sh "docker rm ${CONTAINER_TAG}"
+                    sh "docker stop ${CONTAINER_TAG} || true"
+                    sh "docker rm ${CONTAINER_TAG} || true"
                     sh "docker rmi ${DOCKER_IMAGE} || true"
                     sh "docker build -t ${DOCKER_IMAGE} ."
                     sh "docker run -p 8082:8080 -t ${CONTAINER_TAG} ${DOCKER_IMAGE}"
